@@ -51,12 +51,12 @@ void setupWindow() {
 class Counter with ChangeNotifier {
   int value = 7;
   void increment() {
-    value += 1;
+    value = min(100, value + 1);
     notifyListeners();
   }
 
   void decrement() {
-    value -= 1;
+    value = max(0, value - 1);
     notifyListeners();
   }
 
@@ -114,70 +114,67 @@ class MyHomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Age Counter')),
       body: Center(
-        child: Container(
-          color: colors[index(context.read<Counter>().value)],
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Consumer looks for an ancestor Provider widget
-              // and retrieves its model (Counter, in this case).
-              // Then it uses that model to build widgets, and will trigger
-              // rebuilds if the model is updated.
-              Consumer<Counter>(
-                builder:
-                    (context, counter, child) =>
-                        Text(milestones[index(counter.value)]),
-              ),
-              Consumer<Counter>(
-                builder:
-                    (context, counter, child) => Text(
-                      'I am ${counter.value} years old',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-              ),
-              Consumer<Counter>(
-                builder:
-                    (context, counter, child) => Slider(
-                      value: counter.value.toDouble(),
-                      min: 0.0,
-                      max: 100.0,
-                      onChanged: (value) {
-                        counter.setValue(value.toInt());
-                      },
-                    ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  var counter = context.read<Counter>();
-                  counter.increment();
-                },
-                child: Text("Increase Age"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  var counter = context.read<Counter>();
-                  counter.decrement();
-                },
-                child: Text("Reduce Age"),
-              ),
+        child: Consumer<Counter>(
+          builder: (context, counter, child) {
+            return Column(
+              children: [
+                Container(
+                  color: colors[index(counter.value)],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Consumer looks for an ancestor Provider widget
+                      // and retrieves its model (Counter, in this case).
+                      // Then it uses that model to build widgets, and will trigger
+                      // rebuilds if the model is updated.
+                      Text(milestones[index(counter.value)]),
+                      Text(
+                        'I am ${counter.value} years old',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
 
-              // You can access your providers anywhere you have access
-              // to the contextZ. One way is to use Provider.of<Counter>(context).
-              // The provider package also defines extension methods on the context
-              // itself. You can call context.watch<Counter>() in a build method
-              // of any widget to access the current state of Counter, and to ask
-              // Flutter to rebuild your widget anytime Counter changes.
-              //
-              // You can't use context.watch() outside build methods, because that
-              // often leads to subtle bugs. Instead, you should use
-              // context.read<Counter>(), which gets the current state
-              // but doesn't ask Flutter for future rebuilds.
-              //
-              // Since we're in a callback that will be called whenever the user
-              // taps the FloatingActionButton, we are not in the build method here.
-              // We should use context.read().
-            ],
-          ),
+                      Slider(
+                        value: counter.value.toDouble(),
+                        min: 0.0,
+                        max: 100.0,
+                        onChanged: (value) {
+                          counter.setValue(value.toInt());
+                        },
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          counter.increment();
+                        },
+                        child: Text("Increase Age"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          counter.decrement();
+                        },
+                        child: Text("Reduce Age"),
+                      ),
+
+                      // You can access your providers anywhere you have access
+                      // to the contextZ. One way is to use Provider.of<Counter>(context).
+                      // The provider package also defines extension methods on the context
+                      // itself. You can call context.watch<Counter>() in a build method
+                      // of any widget to access the current state of Counter, and to ask
+                      // Flutter to rebuild your widget anytime Counter changes.
+                      //
+                      // You can't use context.watch() outside build methods, because that
+                      // often leads to subtle bugs. Instead, you should use
+                      // context.read<Counter>(), which gets the current state
+                      // but doesn't ask Flutter for future rebuilds.
+                      //
+                      // Since we're in a callback that will be called whenever the user
+                      // taps the FloatingActionButton, we are not in the build method here.
+                      // We should use context.read().
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
