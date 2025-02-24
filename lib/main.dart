@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -49,13 +50,19 @@ void setupWindow() {
 /// _not_ depend on Provider.
 class Counter with ChangeNotifier {
   int value = 7;
-  void setValue(val) {
-    value = val;
+  void increment() {
+    value += 1;
     notifyListeners();
   }
 
-  double getValue() {
-    return value.toDouble();
+  void decrement() {
+    value -= 1;
+    notifyListeners();
+  }
+
+  void setValue(int val) {
+    value = val;
+    notifyListeners();
   }
 }
 
@@ -74,12 +81,41 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
 
+  static List<String> milestones = [
+    "Baby", // 0-2 = 0
+    "Child", // 3-12 = 1
+    "Teenager", // 13-19 = 2
+    "The Dark Ages", // 20-29
+    "The Dark Ages Pt. 2", // 30-39
+    "Unc Status", // 40-49
+    "Retirement", // 50-59
+    "Dementia's knocking", // 60+
+  ];
+  static List<MaterialColor> colors = [
+    Colors.lightBlue,
+    Colors.lightGreen,
+    Colors.yellow,
+    Colors.orange,
+    Colors.deepOrange,
+    Colors.deepPurple,
+    Colors.grey,
+    Colors.blueGrey,
+  ];
+  int index(int value) {
+    if (value < 20) {
+      return ((7 + value) ~/ 10).clamp(0, 2);
+    } else {
+      return min(milestones.length - 1, (value ~/ 10) + 1);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Age Counter')),
       body: Center(
         child: Container(
+          color: colors[index(context.read<Counter>().value)],
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -87,7 +123,11 @@ class MyHomePage extends StatelessWidget {
               // and retrieves its model (Counter, in this case).
               // Then it uses that model to build widgets, and will trigger
               // rebuilds if the model is updated.
-              Text("You are a child!"),
+              Consumer<Counter>(
+                builder:
+                    (context, counter, child) =>
+                        Text(milestones[index(counter.value)]),
+              ),
               Consumer<Counter>(
                 builder:
                     (context, counter, child) => Text(
@@ -95,14 +135,32 @@ class MyHomePage extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
               ),
-              Slider(
-                value: context.read<Counter>().getValue(),
-                min: 0.0,
-                max: 100.0,
-                onChanged: (value) {
-                  context.read<Counter>().setValue(value.toInt());
-                },
+              Consumer<Counter>(
+                builder:
+                    (context, counter, child) => Slider(
+                      value: counter.value.toDouble(),
+                      min: 0.0,
+                      max: 100.0,
+                      onChanged: (value) {
+                        counter.setValue(value.toInt());
+                      },
+                    ),
               ),
+              ElevatedButton(
+                onPressed: () {
+                  var counter = context.read<Counter>();
+                  counter.increment();
+                },
+                child: Text("Increase Age"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  var counter = context.read<Counter>();
+                  counter.decrement();
+                },
+                child: Text("Reduce Age"),
+              ),
+
               // You can access your providers anywhere you have access
               // to the contextZ. One way is to use Provider.of<Counter>(context).
               // The provider package also defines extension methods on the context
