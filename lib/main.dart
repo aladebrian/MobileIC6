@@ -49,14 +49,13 @@ void setupWindow() {
 /// _not_ depend on Provider.
 class Counter with ChangeNotifier {
   int value = 7;
-  void increment() {
-    value += 1;
+  void setValue(val) {
+    value = val;
     notifyListeners();
   }
 
-  void decrement() {
-    value -= 1;
-    notifyListeners();
+  double getValue() {
+    return value.toDouble();
   }
 }
 
@@ -74,6 +73,7 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,6 +87,7 @@ class MyHomePage extends StatelessWidget {
               // and retrieves its model (Counter, in this case).
               // Then it uses that model to build widgets, and will trigger
               // rebuilds if the model is updated.
+              Text("You are a child!"),
               Consumer<Counter>(
                 builder:
                     (context, counter, child) => Text(
@@ -94,46 +95,32 @@ class MyHomePage extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  var counter = context.read<Counter>();
-                  counter.increment();
+              Slider(
+                value: context.read<Counter>().getValue(),
+                min: 0.0,
+                max: 100.0,
+                onChanged: (value) {
+                  context.read<Counter>().setValue(value.toInt());
                 },
-                child: Text("Increase Age"),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  var counter = context.read<Counter>();
-                  counter.decrement();
-                },
-                child: Text("Reduce Age"),
-              ),
+              // You can access your providers anywhere you have access
+              // to the contextZ. One way is to use Provider.of<Counter>(context).
+              // The provider package also defines extension methods on the context
+              // itself. You can call context.watch<Counter>() in a build method
+              // of any widget to access the current state of Counter, and to ask
+              // Flutter to rebuild your widget anytime Counter changes.
+              //
+              // You can't use context.watch() outside build methods, because that
+              // often leads to subtle bugs. Instead, you should use
+              // context.read<Counter>(), which gets the current state
+              // but doesn't ask Flutter for future rebuilds.
+              //
+              // Since we're in a callback that will be called whenever the user
+              // taps the FloatingActionButton, we are not in the build method here.
+              // We should use context.read().
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // You can access your providers anywhere you have access
-          // to the context. One way is to use Provider.of<Counter>(context).
-          // The provider package also defines extension methods on the context
-          // itself. You can call context.watch<Counter>() in a build method
-          // of any widget to access the current state of Counter, and to ask
-          // Flutter to rebuild your widget anytime Counter changes.
-          //
-          // You can't use context.watch() outside build methods, because that
-          // often leads to subtle bugs. Instead, you should use
-          // context.read<Counter>(), which gets the current state
-          // but doesn't ask Flutter for future rebuilds.
-          //
-          // Since we're in a callback that will be called whenever the user
-          // taps the FloatingActionButton, we are not in the build method here.
-          // We should use context.read().
-          var counter = context.read<Counter>();
-          counter.increment();
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
